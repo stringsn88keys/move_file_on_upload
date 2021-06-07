@@ -45,9 +45,9 @@ def lambda_handler(event:, context:)
             })
             puts resp.to_json
         rescue Aws::S3::Errors::NoSuchKey => nsk
-            return {statusCode: 404, error_json(nsk)}
+            return {statusCode: 404, body: error_json(nsk)}
         rescue => e
-            return {statusCode: 500, error_json(e)}
+            return {statusCode: 500, body: error_json(e)}
         end
     end
 
