@@ -28,7 +28,7 @@ def lambda_handler(event:, context:)
         next if is_top_level?(key)
         
         begin 
-            puts "Copying #{CGI.unespace(key)} from #{from_bucket} to #{to_bucket}"
+            puts "Copying #{CGI.unescape(key)} from #{from_bucket} to #{to_bucket}"
 
             # copy_source needs url encoded
             # key needs to be unescaped or else your key will just have url_encoded
