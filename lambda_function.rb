@@ -7,7 +7,7 @@ require 'json'
 require 'cgi'
 
 def is_top_level?(key)
-    key['/'].nil?
+    key.split('/').length == 1
 end
 
 def error_json(e)
@@ -21,35 +21,33 @@ def lambda_handler(event:, context:)
     to_bucket = ENV['TO_BUCKET']
     resp = ''
 
-    event['Records'].each do |record|
-        # key will be url encoded
-        key=record['s3']['object']['key']
+    # key will be url encoded
+    key=event['requestParameters']['detail']['key']
 
-        # Don't process or delete top level folders
-        next if is_top_level?(key)
-        
-        begin 
-            puts "Copying #{CGI.unescape(key)} from #{from_bucket} to #{to_bucket}"
+    # Don't process or delete top level folders
+    next if is_top_level?(key)
+    
+    begin 
+        puts "Copying #{CGI.unescape(key)} from #{from_bucket} to #{to_bucket}"
 
-            # copy_source needs url encoded
-            # key needs to be unescaped or else your key will just have url_encoded
-            # characters
-            resp = client.copy_object({
-                bucket: to_bucket,
-                copy_source: "#{from_bucket}/#{key}",
-                key: CGI.unescape(key)
-            })
-            puts resp.to_json    
-            resp = client.delete_object({
-                bucket: from_bucket,
-                key: CGI.unescape(key)
-            })
-            puts resp.to_json
-        rescue Aws::S3::Errors::NoSuchKey => nsk
-            return {statusCode: 404, body: error_json(nsk)}
-        rescue => e
-            return {statusCode: 500, body: error_json(e)}
-        end
+        # copy_source needs url encoded
+        # key needs to be unescaped or else your key will just have url_encoded
+        # characters
+        resp = client.copy_object({
+            bucket: to_bucket,
+            copy_source: "#{from_bucket}/#{key}",
+            key: CGI.unescape(key)
+        })
+        puts resp.to_json    
+        resp = client.delete_object({
+            bucket: from_bucket,
+            key: CGI.unescape(key)
+        })
+        puts resp.to_json
+    rescue Aws::S3::Errors::NoSuchKey => nsk
+        return {statusCode: 404, body: error_json(nsk)}
+    rescue => e
+        return {statusCode: 500, body: error_json(e)}
     end
 
     { statusCode: 200, body: resp.to_json }
