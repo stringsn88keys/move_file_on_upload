@@ -19,6 +19,7 @@ def lambda_handler(event:, context:)
     client = Aws::S3::Client.new
     from_bucket = ENV['FROM_BUCKET']
     to_bucket = ENV['TO_BUCKET']
+    resp = ''
 
     event['Records'].each do |record|
         # key will be url encoded
@@ -51,5 +52,5 @@ def lambda_handler(event:, context:)
         end
     end
 
-    { statusCode: 200, body: response.to_json }
+    { statusCode: 200, body: resp.to_json }
 end
